@@ -1,0 +1,22 @@
+4/16/2020:
+
+1. Added Exit rate for dye molecules. The same variable (HitRate) is used to delete or remove random molecules from the frame then adds the same number (given by HitRate) of molecules to the frame.
+
+2. Predefined the variable 'frame' to speed up the script
+
+Problem to Work on: Right now HitRate is a constant that depends on the area of interest, dye concentration and acquisition time. I probably need to add some sort of random probabilty distribution to it.
+
+
+
+4/10/2020:
+
+1. Incorporated Diffusion parameters - that is calculating the stepsize of motion from the provided diffusion constant, and time scales. Assuming normal Brownian diffusion.
+
+2. Gave actual size to pixel in terms of nanometers.
+
+3. Incorporated Hitting Rate on the imaging surface following Jixin Chen's paper - https://doi.org/10.3762%2Fbjnano.9.74 and wikipedia page - https://en.wikipedia.org/wiki/Anomalous_diffusion
+
+With incorporating the hitting rate, we no longer need to specify the number of molecules that we are simulating. Instead specify the concentration of the bulk dye solution, and the script will calculate the number of dye molecules that will hit the imaging plane based on it. 
+
+Problem to work on: The dye molecules remain stuck in the imaging plane as there is no force/potential defined for them to go out of the imaging plane.
+
