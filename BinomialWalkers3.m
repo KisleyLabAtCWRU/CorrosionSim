@@ -1,4 +1,4 @@
-function [frame]=BinomialWalkers3(A,r1,HitRate,px,sigmax,nsteps,StepSize,Display)
+function [frame,sz]=BinomialWalkers3(A,r1,HitRate,UncerHR,px,sigmax,nsteps,StepSize,Display)
 
 m = randi([1 px],1,r1);  %Creating random coordinates for dye molecules
 n = randi([1 px],1,r1);  % m is for abscissa (x) and n is for ordinate (y)
@@ -16,12 +16,19 @@ n = randi([1 px],1,r1);  % m is for abscissa (x) and n is for ordinate (y)
 % end
 
 frame=zeros(px,px,nsteps);
+sz=zeros(1,nsteps);
 
 for i = 1:nsteps
+    
+    fprintf('Step Number %d \n',i)
+    
+    if size(m,2) < HitRate+1
+    else
     for j = 1:HitRate               % Deleting dye molecules that leave the frame
         deldye=randi([1,size(m,2)]);
         m(deldye)=[];
         n(deldye)=[];
+    end
     end
     
     r=size(m,2);
@@ -55,16 +62,19 @@ else
 end
     end
 
-m1 = randi([1 px],1,HitRate);  %Creating random coordinates for new dye molecules Hitting the imaging plane
-n1 = randi([1 px],1,HitRate);  % m1 is for abscissa (x) and n1 is for ordinate (y)
+HR1=round(randn(1)*HitRate*UncerHR);    
+    
+m1 = randi([1 px],1,HitRate+HR1);  %Creating random coordinates for new dye molecules Hitting the imaging plane
+n1 = randi([1 px],1,HitRate+HR1);  % m1 is for abscissa (x) and n1 is for ordinate (y)
 
 m=cat(2,m,m1);
 n=cat(2,n,n1);
 
 [frame(:,:,i)]=CreatingFrame(A,r,px,sigmax,m,n); %Creates the next frame
 
+sz(i)=size(m,2);
+
 if Display == true
-fprintf('Step Number %d \n',i)
 imagesc([1,px-1],[1,px-1],frame(:,:,i));
 pause(1/1000);
 else

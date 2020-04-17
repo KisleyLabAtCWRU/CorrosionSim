@@ -1,3 +1,10 @@
+4/17/2020:
+1. Added a new user set variable - UncerHR. This variable provides the uncertainity in the Hitting rate. The HitRate is changed every time step within this specified uncertainity. 
+
+2. Added an if then else statement to not remove any molecules from the imaging plane if the number of molecules present in the imaging plane is less than the hitting rate. This avoids an error of trying to remove a molecule when none is present in the imaging plane.
+
+3. Distribution functions also reports the number of molecules present in the imaging plane per time step as a variable 'sz'
+
 4/16/2020:
 
 1. Added Exit rate for dye molecules. The same variable (HitRate) is used to delete or remove random molecules from the frame then adds the same number (given by HitRate) of molecules to the frame.
