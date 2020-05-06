@@ -1,3 +1,11 @@
+5/6/2020:
+1. Added a major update to the main code files - RandomWalkers4.m and the matlab function NormalWalkers4.m. Added another fucntion file named PitsFrame.m
+
+2. PitsFrame.m calculates frames based on parameters provided by the main file. It uses Random Weibull Generator to create random variables for generating pit initiation times, pit location, and sizes.
+
+3. Saves more variables to the disk. 
+
+
 4/17/2020:
 1. Added a new user set variable - UncerHR. This variable provides the uncertainity in the Hitting rate. The HitRate is changed every time step within this specified uncertainity. 
 
