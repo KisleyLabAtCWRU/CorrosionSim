@@ -35,3 +35,23 @@ With incorporating the hitting rate, we no longer need to specify the number of 
 
 Problem to work on: The dye molecules remain stuck in the imaging plane as there is no force/potential defined for them to go out of the imaging plane.
 
+9/15/2020 - Hannah
+Uploaded files for the most recent version of the corrosion/diffusion simulation. There are 18 files that are part of the model, listed below. The model is run from the CorrosionDiffusionSimulation script
+AdjCathLoc
+Corrosion
+CorrosionDiffusionSimulation
+corrosionMovie
+CreateCirclePit
+CreateFrameCorrosion
+CreateFrameDiffusion
+Diffusion
+DyeDistanceAnalysis
+Gauss2D
+LocateNNs
+MoveDyes_Normal
+MovieWriter
+NearestNNVariableNeighborhood
+PeriodicBound
+SetUpFolder
+SumMooreNeighborhood
+turnOnOverlay
