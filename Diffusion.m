@@ -53,15 +53,15 @@ for t=1:T
         end
         if strcmp(dye, 'Resazurin') == 1 %if using resazurin which turns on at cathode
             if CA(round(dyeProps(l,1)), round(dyeProps(l,2))) == 1 %finds nearest pit edge if not over pit
-                [~, M1, N1] = (NearestNNVariableNeighborhood(CA, [dyeProps(l,1),dyeProps(l,2)], 2, ((cn+sensMax)/2)-1)); %distance to nearest pit
+                [~, M1, N1] = (NearestNNVariableNeighborhood(CA, [dyeProps(l,1),dyeProps(l,2)], 2, ((cn+sensMax/pxsize)/2)-1)); %distance to nearest pit
             elseif CA(round(dyeProps(l,1)), round(dyeProps(l,2))) == 2 %finds nearest pit edge if over pit
-                [~, M1, N1] = (NearestNNVariableNeighborhood(CA, [dyeProps(l,1),dyeProps(l,2)], 1, ((cn+sensMax)/2)-1)); %distance to nearest pit
+                [~, M1, N1] = (NearestNNVariableNeighborhood(CA, [dyeProps(l,1),dyeProps(l,2)], 1, ((cn+sensMax/pxsize)/2)-1)); %distance to nearest pit
             end
             if ~isnan(M1)
                 cathLoc1 = AdjCathLoc(M1, N1, dyeProps(l,1:2), CA, cathLoc); %adjust cathLoc distribution to set prob 0 over pit
                 C1 = conv2(cathLoc1, dyeSens);
                 C = C1/max(max(C1));
-                zeroInd = ceil(cm/2)+floor(sensMax/2);
+                zeroInd = ceil(cm/2)+floor(sensMax/pxsize/2);
                 Prob = C(zeroInd-M1,zeroInd-N1); %the index of the pit with respect to the dye
                                         %is [M1, N1] so the index of dye with
                                         %respect to pit is [-M1, -N1] and we

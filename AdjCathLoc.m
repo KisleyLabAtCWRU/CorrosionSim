@@ -7,8 +7,8 @@ function [cathLoc1] = AdjCathLoc(M1, N1, dyeLoc, CA, cathLoc)
 %returns adjusted probability matrix
 
 px = size(CA,1);
-M = dyeLoc(1) + M1;
-N = dyeLoc(2) + N1; %absolute coordinates of nearest pit (r, c)
+M = PeriodicBound(round(dyeLoc(1)),px) + M1;
+N = PeriodicBound(round(dyeLoc(2)),px) + N1; %absolute coordinates of nearest pit (r, c)
 cathLoc1 = cathLoc;
 cathCounter = 0; %number of cells over pit
 cathRem = 0; %total probability removed 
