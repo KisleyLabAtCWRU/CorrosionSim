@@ -64,18 +64,13 @@ for j = 1:size(m,1) % Moves the remaining molecules
                 n(j)=n(j)-nshift(j);
             end
         end
-if m(j) < 1 %reflect at boundaries
-    m(j) = 1;
-elseif m(j) > px
-    m(j) = px;
+while m(j) > px || m(j)< 1
+    m(j) = PeriodicBound(m(j), px);
 end
-if n(j) < 1
-    n(j) = 1;
-elseif n(j) > px
-    n(j) = px;
+while n(j) > px || n(j) < 1
+    n(j) = PeriodicBound(n(j), px);
 end
 end
-
 %Random number of molecules that need to added within the given uncertainity
 HR2=randi([round(HitRate-HitRate*UncerHR), round(HitRate+HitRate*UncerHR)]);
 

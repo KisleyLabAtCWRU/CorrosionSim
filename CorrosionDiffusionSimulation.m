@@ -14,7 +14,7 @@ pxsize = 10; %pixel size in nm
 linked = false; %true will run corrosion and diffusion concurrently/simealteaneaously, 
                 %false will run corrosion first then diffusion in each overall loop
 if linked == false %input desired values 
-    diffT = 100; %number of time steps for diffusion script
+    diffT = 600; %number of time steps for diffusion script
     diffdT = 0.5; %length of time step for diffusion in seconds
     corrT = 5; %number of time steps for corrosion script
     corrdT = 10; %length of corrosion time step in seconds
@@ -38,11 +38,13 @@ if runCorrosion == true
     Pgr = 0.01 ; %growth probability per nearest neighbor per second
     %excl = 10; %exclusion zone for pits, the time constant of the exponential representing the exclusion zone probability
                 %not currently in use (9/10/2020)
+else
+    pitrad = 500; %radius of static pit in nm
 end
 %cathLoc will be used to define a 2D gaussian probability distribution 
 %   for the locaion of the cathodic reaction outside a pit
-cathLocMax = 5e3; %maximum possible distance for cathodic reaction in nm
-cathSigma = 500; %standard deciation for cathloc gaussian in nm
+cathLocMax = 5000; %maximum possible distance for cathodic reaction in nm
+cathSigma = 100; %standard deciation for cathloc gaussian in nm
 cathLoc = zeros(cathLocMax/pxsize); %cathode location probability matrix
 for i=1:cathLocMax/pxsize
     for j = 1:cathLocMax/pxsize
@@ -53,9 +55,9 @@ end
 runDyes = true; %true will run diffusion in every loop, false will not
 if runDyes == true
     Conc=100e-9; %Dye concentration in moles/L
-    D=4e8; % Diffusion constant D (in nm^2/s)
-    sensMax = 5e3; %maximum distance in nm at which a dye can react with the cathode
-    sensSigma = 300; %standard deviation for the dye sensitivity distribution in nm
+    D=3e8; % Diffusion constant D (in nm^2/s)
+    sensMax = 500; %maximum distance in nm at which a dye can react with the cathode
+    sensSigma = 10; %standard deviation for the dye sensitivity distribution in nm
     dye = 'FD1'; %which dye is being used ('Resazurin' or 'FD1')
     ironProb = 1; %prob that Fe ion detecting dye (like 'FD1') will turn on if over pit
 end
@@ -65,7 +67,7 @@ turnOnLocs = [];
 saveMovie = true; %true saves a movie of the CA
 saveData = true; %true saves data related to corrosion growth, number of pits, dye turn ons, and number of dyes in view (and more)
 plotTurnOns = false; %true will add x's to corrosion movie for turn on events
-frameRate = 1; %frames/second
+frameRate = 5; %frames/second
 folder = 'C:\Users\Hannah\Documents\CWRU\2020_SeniorProject\Fall 2020\CorrosionModelVer5_Files\SimulationResults';
 filename = 'SingleCirclePit';
 
@@ -104,7 +106,7 @@ for h=1:numLoops
             startTime = startTime + corrT*corrdT;
         end
     else
-        CA = CreateCirclePit(px, 2); %if not running the corrosion script, create a
+        CA = CreateCirclePit(px, pitrad/pxsize); %if not running the corrosion script, create a
                                        %    static pit over which to run
                                        %    diffsion
     end
@@ -134,7 +136,7 @@ for h=1:numLoops
             if runDyes == true
                 dlmwrite(strcat(Path, filename, sprintf('_turnOnLocs%d',h)), turnOnLocs);
                 dlmwrite(strcat(Path, filename, sprintf('_dyeTracker%d',h)), dyeTracker); 
-                save(strcat(Path, filename, sprintf('OnLocations%d.mat', h)), 'onLocs');
+                save(strcat(Path, filename, sprintf('_OnLocations%d.mat', h)), 'onLocs');
             end
             dlmwrite(strcat(Path,filename, sprintf('_CA%d',h)), CA);
         end
@@ -204,12 +206,13 @@ if saveData == true || saveMovie == true
         MetaData.Pgrowth = Pgr;
         %MetaData.exclusionZone = excl; (not currently using exlusion zone
         %(9/11/2020)
-        MetaData.cathodeSigma = cathSigma;
-        MetaData.cathodeSigmaUnits = 'nm';
     else
         MetaData.Corrosion = 'No Corrosion';
+        MetaData.PitRadius = pitrad;
+        MetaData.PitRadiusUnits = 'nm';
     end
     if runDyes == true
+        MetaData.Dye = dye;
         MetaData.diffusionTime = diffT;
         MetaData.diffusionTimeStep = diffdT;
         MetaData.diffusionTimeStepUnits = 's';
@@ -219,6 +222,8 @@ if saveData == true || saveMovie == true
         MetaData.concentrationUnits = 'M/L';
         MetaData.sensitivity = sensSigma;
         MetaData.sensitivityUnits = 'nm';
+        MetaData.cathodeSigma = cathSigma;
+        MetaData.cathodeSigmaUnits = 'nm';
     else
         MetaData.dyes = 'no dyes';
     end
