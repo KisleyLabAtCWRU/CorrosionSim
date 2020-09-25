@@ -28,6 +28,9 @@ for k = 1:r
         end
     end
 end
+if r==0;
+    frame = zeros(px,px);
+end
 figure(fig)
 figure('visible', 'off')
 imagesc([1,px],[1,px],frame);

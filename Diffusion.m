@@ -38,7 +38,7 @@ end
 dyeOn = zeros(500,3); %matrix for saving turn on locations and times, needs to be longer than the amount of turn on events we predict will occur
 dyeCounter = 1;
 dyeTracker = zeros(T,2); %First column is dyes that are on in each frame, second is total dyes in each frame
-onLocs = {}; % cell array that will save matrix of ALL fluorescent dye locs at each time
+onLocs = []; % cell array that will save matrix of ALL fluorescent dye locs at each time
 
 %% run rules
 for t=1:T
@@ -53,12 +53,13 @@ for t=1:T
         end
         if strcmp(dye, 'Resazurin') == 1 %if using resazurin which turns on at cathode
             if CA(round(dyeProps(l,1)), round(dyeProps(l,2))) == 1 %finds nearest pit edge if not over pit
-                [~, M1, N1] = (NearestNNVariableNeighborhood(CA, [dyeProps(l,1),dyeProps(l,2)], 2, ((cn+sensMax/pxsize)/2)-1)); %distance to nearest pit
+                [dist, M1, N1] = (NearestNNVariableNeighborhood(CA, [dyeProps(l,1),dyeProps(l,2)], 2, ((cn+sensMax/pxsize)/2)-1)); %distance to nearest pit
             elseif CA(round(dyeProps(l,1)), round(dyeProps(l,2))) == 2 %finds nearest pit edge if over pit
-                [~, M1, N1] = (NearestNNVariableNeighborhood(CA, [dyeProps(l,1),dyeProps(l,2)], 1, ((cn+sensMax/pxsize)/2)-1)); %distance to nearest pit
+                [dist, M1, N1] = (NearestNNVariableNeighborhood(CA, [dyeProps(l,1),dyeProps(l,2)], 1, ((cn+sensMax/pxsize)/2)-1)); %distance to nearest pit
             end
             if ~isnan(M1)
-                cathLoc1 = AdjCathLoc(M1, N1, dyeProps(l,1:2), CA, cathLoc); %adjust cathLoc distribution to set prob 0 over pit
+                
+                cathLoc1 = AdjCathLoc(M1, N1,(dyeProps(l,1:2)), CA, cathLoc); %adjust cathLoc distribution to set prob 0 over pit
                 C1 = conv2(cathLoc1, dyeSens);
                 C = C1/max(max(C1));
                 zeroInd = ceil(cm/2)+floor(sensMax/pxsize/2);
@@ -92,9 +93,12 @@ for t=1:T
     diffusionMovie=CreateFrameDiffusion(dyeProps,px,sigmax,diffusionMovie, diffusionFig, startTime, dT, frameRate,CA); %Creates the moved frame
     end
     offInds = find(dyeProps(:,3)<=0.4);
-    onDyes = dyeProps;
+    S1 = size(dyeProps,1);
+    onDyes = zeros(S1, 5);
+    onDyes(:, 1:4) = dyeProps;
+    onDyes(:,5) = t;
     onDyes(offInds,:) = []; %delete not turned on dyes in the onDyes matrix
-    onLocs{t} = onDyes;
+    onLocs = [onLocs;onDyes];
     [dyeProps, labelNumber] = MoveDyes_Normal(dyeProps, dimA,HitRate,UncerHR,px,StepSize);
 end
 

@@ -14,8 +14,8 @@ pxsize = 10; %pixel size in nm
 linked = false; %true will run corrosion and diffusion concurrently/simealteaneaously, 
                 %false will run corrosion first then diffusion in each overall loop
 if linked == false %input desired values 
-    diffT = 600; %number of time steps for diffusion script
-    diffdT = 0.5; %length of time step for diffusion in seconds
+    diffT = 1200; %number of time steps for diffusion script
+    diffdT = 0.05; %length of time step for diffusion in seconds
     corrT = 5; %number of time steps for corrosion script
     corrdT = 10; %length of corrosion time step in seconds
 elseif linked == true
@@ -39,11 +39,11 @@ if runCorrosion == true
     %excl = 10; %exclusion zone for pits, the time constant of the exponential representing the exclusion zone probability
                 %not currently in use (9/10/2020)
 else
-    pitrad = 500; %radius of static pit in nm
+    pitrad = 15; %radius of static pit in nm
 end
 %cathLoc will be used to define a 2D gaussian probability distribution 
 %   for the locaion of the cathodic reaction outside a pit
-cathLocMax = 5000; %maximum possible distance for cathodic reaction in nm
+cathLocMax = 1000; %maximum possible distance for cathodic reaction in nm
 cathSigma = 100; %standard deciation for cathloc gaussian in nm
 cathLoc = zeros(cathLocMax/pxsize); %cathode location probability matrix
 for i=1:cathLocMax/pxsize
@@ -55,10 +55,10 @@ end
 runDyes = true; %true will run diffusion in every loop, false will not
 if runDyes == true
     Conc=100e-9; %Dye concentration in moles/L
-    D=3e8; % Diffusion constant D (in nm^2/s)
-    sensMax = 500; %maximum distance in nm at which a dye can react with the cathode
-    sensSigma = 10; %standard deviation for the dye sensitivity distribution in nm
-    dye = 'FD1'; %which dye is being used ('Resazurin' or 'FD1')
+    D=1e8; % Diffusion constant D (in nm^2/s)
+    sensMax = 100; %maximum distance in nm at which a dye can react with the cathode
+    sensSigma = 1; %standard deviation for the dye sensitivity distribution in nm
+    dye = 'Resazurin'; %which dye is being used ('Resazurin' or 'FD1')
     ironProb = 1; %prob that Fe ion detecting dye (like 'FD1') will turn on if over pit
 end
 turnOnLocs = [];
@@ -79,9 +79,9 @@ end
 %% initialize data
 CA = [];
 corrosionMovie = [];
-corrosionFig = figure;
+corrosionFig = figure
 diffusionMovie = [];
-diffusionFig = figure;
+diffusionFig = figure
 if linked == true
     if runCorrosion == true
     corrosionTrackerTotal = [];
