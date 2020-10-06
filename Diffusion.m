@@ -12,7 +12,7 @@ function [dyeTracker, turnOnLocs, diffusionMovie, diffusionFig, onLocs, dyeProps
 %% set dye parameters
 dimA=0.1; %Amplitude of the non-fluorescent molecules
 sigmax=5; %width of the dye guassian in movie in pixels
-StepSize=sqrt(2*D*dT)/pxsize; %average step size in pixels
+StepSize=sqrt(2*2*D*dT)/pxsize; %RMSD = sqrt(MSD) = sqrt(2*n*D*T) where n is number of dimensions
 surfA=(px*pxsize*1e-9)^2; %Sample surface area in m2
 HitRate=surfA*Conc*sqrt(D*1e-18/(pi*dT))/2*6.023e23*dT; %Hitting Rate in # of molecules/dT
 UncerHR=0.1; % Uncertainity in hitting rate, represented as percentage
@@ -90,7 +90,7 @@ for t=1:T
     dyeTracker(t,1) = length(find(dyeProps(:,3) >= 0.8));
     dyeTracker(t,2) = size(dyeProps,1);
     if linked == false
-    diffusionMovie=CreateFrameDiffusion(dyeProps,px,sigmax,diffusionMovie, diffusionFig, startTime, dT, frameRate,CA); %Creates the moved frame
+    diffusionMovie=CreateFrameDiffusion(dyeProps,px,sigmax,diffusionMovie, diffusionFig, startTime, dT, frameRate,CA, 'true'); %Creates the moved frame
     end
     offInds = find(dyeProps(:,3)<=0.4);
     S1 = size(dyeProps,1);

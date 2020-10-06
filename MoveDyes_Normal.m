@@ -35,54 +35,32 @@ HR1=randi([round(HitRate-HitRate*UncerHR), round(HitRate+HitRate*UncerHR)]);
         end
     end
 
-mshift=randn(size(m,1),1)+StepSize; % Generates the distance to be moved by each dye
-nshift=randn(size(m,1),1)+StepSize;
-mdir=randi([0,1],1,size(m,1)); % Generate the direction in which to move for each dye
-ndir=randi([0,1],1,size(m,1));
+%mshift=randn(size(m,1),1)+StepSize; % Generates the distance to be moved by each dye
+%nshift=randn(size(m,1),1)+StepSize;
+%mdir=randi([0,1],1,size(m,1)); % Generate the direction in which to move for each dye
+%ndir=randi([0,1],1,size(m,1));
+rshift = randn(size(m,1),1) + StepSize; %generates distance to be moved
+dir = 2*pi.*rand(size(m,1),1); %generate angle/direction of movement
+mshift = rshift.*sin(dir);
+nshift = rshift.*cos(dir);
+
 
 delDye1 = [];
 for j = 1:size(m,1) % Moves the remaining molecules
-        if (m(j)+mshift(j)>px) % Boundary conditions, reflects the dye molecule
-            m(j)=m(j)-mshift(j); % back at the boundary for abscissa (x)
-        elseif (m(j)-mshift(j)<0)
-            m(j)=m(j)+mshift(j);
-        else
-            if mdir(j)==0           % moves the dye molecule based on the variables
-                m(j)=m(j)+mshift(j);    % for abscissa(x)
-            else
-                m(j)=m(j)-mshift(j);
-            end
-        end
-        
-        if (n(j)+nshift(j)>px)      % Boundary conditions, reflects the dye molecule
-            n(j)=n(j)-nshift(j);    % back at the boundary for ordinate (y)
-        elseif (n(j)-nshift(j)<0)   
-            n(j)=n(j)+nshift(j);
-        else
-            if ndir(j)==0
-                n(j)=n(j)+nshift(j);
-            else
-                n(j)=n(j)-nshift(j);
-            end
-        end
+        m(j)=m(j)+mshift(j);
+        n(j)=n(j)+nshift(j);
+
         if m(j) > px || m(j)< 1 %delete dyes that have moved out of the frame
             delDye1 = [delDye1, j];
         elseif n(j) > px || n(j)< 1
             delDye1 = [delDye1, j];
         end
-%while m(j) > px || m(j)< 1
-%    m(j) = PeriodicBound(m(j), px);
-%end
-%while n(j) > px || n(j) < 1
-%    n(j) = PeriodicBound(n(j), px);
-%end
 end
 
 m(delDye1,:) = []; %delete dyes that have moved out of frame
 n(delDye1,:) = [];
 A(delDye1,:) = [];
 N(delDye1,:) = [];
-
 %Random number of molecules that need to added within the given uncertainity
 HR2=randi([round(HitRate-HitRate*UncerHR), round(HitRate+HitRate*UncerHR)])+length(delDye1); %to account for two dimensional coming into and out of field of view
 

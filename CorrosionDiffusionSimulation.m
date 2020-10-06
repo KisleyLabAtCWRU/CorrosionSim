@@ -9,12 +9,12 @@
 clear
 tic
 %% Set dimensional parameters
-px = 200; %number of pixels in each dimension
+px = 500; %number of pixels in each dimension
 pxsize = 10; %pixel size in nm
 linked = false; %true will run corrosion and diffusion concurrently/simealteaneaously, 
                 %false will run corrosion first then diffusion in each overall loop
 if linked == false %input desired values 
-    diffT = 1200; %number of time steps for diffusion script
+    diffT = 100; %number of time steps for diffusion script
     diffdT = 0.05; %length of time step for diffusion in seconds
     corrT = 5; %number of time steps for corrosion script
     corrdT = 10; %length of corrosion time step in seconds
@@ -54,8 +54,8 @@ end
 %% set dye parameters
 runDyes = true; %true will run diffusion in every loop, false will not
 if runDyes == true
-    Conc=100e-9; %Dye concentration in moles/L
-    D=1e8; % Diffusion constant D (in nm^2/s)
+    Conc=100e-6; %Dye concentration in moles/L
+    D=1e7; % Diffusion constant D (in nm^2/s)
     sensMax = 100; %maximum distance in nm at which a dye can react with the cathode
     sensSigma = 1; %standard deviation for the dye sensitivity distribution in nm
     dye = 'Resazurin'; %which dye is being used ('Resazurin' or 'FD1')
@@ -67,9 +67,9 @@ turnOnLocs = [];
 saveMovie = true; %true saves a movie of the CA
 saveData = true; %true saves data related to corrosion growth, number of pits, dye turn ons, and number of dyes in view (and more)
 plotTurnOns = false; %true will add x's to corrosion movie for turn on events
-frameRate = 5; %frames/second
+frameRate = 10; %frames/second
 folder = 'C:\Users\Hannah\Documents\CWRU\2020_SeniorProject\Fall 2020\CorrosionModelVer5_Files\SimulationResults';
-filename = 'SingleCirclePit';
+filename = 'DiffusionCoefficientTest_1e3';
 
 %% set up folder
 if saveMovie == true || saveData == true
@@ -78,10 +78,6 @@ end
 
 %% initialize data
 CA = [];
-corrosionMovie = [];
-corrosionFig = figure
-diffusionMovie = [];
-diffusionFig = figure
 if linked == true
     if runCorrosion == true
     corrosionTrackerTotal = [];
@@ -96,6 +92,10 @@ end
 %% run simulation
 clear MoveDyes_Normal
 for h=1:numLoops
+    corrosionMovie = [];
+    corrosionFig = figure
+    diffusionMovie = [];
+    diffusionFig = figure
     sprintf('Loop %d', h)
         clear CreateFrameDiffusion %clear the persistent variable in the CreatingFrame function
         clear CreateFrameCorrosion
@@ -137,6 +137,7 @@ for h=1:numLoops
                 dlmwrite(strcat(Path, filename, sprintf('_turnOnLocs%d',h)), turnOnLocs);
                 dlmwrite(strcat(Path, filename, sprintf('_dyeTracker%d',h)), dyeTracker); 
                 save(strcat(Path, filename, sprintf('_OnLocations%d.mat', h)), 'onLocs');
+                clear turnOnLocs dyeTracker onLocs dyeProps
             end
             dlmwrite(strcat(Path,filename, sprintf('_CA%d',h)), CA);
         end

@@ -1,7 +1,6 @@
 function [fig] = turnOnOverlay(CA, turnOnLocs)
 %creates figure of corrosion lattice with turn on events overlaid as red
 %x's
-
 clim = [1, 3];
 map = [0 0 0  %M = black, C = gray
        0.5 0.5 0.5];
