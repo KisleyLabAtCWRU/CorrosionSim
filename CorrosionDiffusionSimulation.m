@@ -27,11 +27,11 @@ elseif linked == true
     corrT = 1;
 end
 startTime = 0; 
-numLoops = 6; %number of full corrosion and diffusion loops. 
+numLoops = 1; %number of full corrosion and diffusion loops. 
               %if linked = true this is the total time steps of the simulation
 
 %% set corrosion parameters
-runCorrosion = true; %true will run corrosion script in each loop, false will not
+runCorrosion = false; %true will run corrosion script in each loop, false will not
 if runCorrosion == true
     Pin = 5e-11; %probability of initiation per second per nm^2
     PinUncer = 2; %percent uncertainty in Pin 
@@ -55,7 +55,7 @@ end
 runDyes = true; %true will run diffusion in every loop, false will not
 if runDyes == true
     Conc=20e-9; %Dye concentration in moles/L
-    D=4e8; % Diffusion constant D (in nm^2/s)
+    D=1e8; % Diffusion constant D (in nm^2/s)
     sensMax = 100; %maximum distance in nm at which a dye can react with the cathode
     sensSigma = 1; %standard deviation for the dye sensitivity distribution in nm
     dye = 'Resazurin'; %which dye is being used ('Resazurin' or 'FD1')
@@ -68,8 +68,8 @@ saveMovie = true; %true saves a movie of the CA
 saveData = true; %true saves data related to corrosion growth, number of pits, dye turn ons, and number of dyes in view (and more)
 plotTurnOns = false; %true will add x's to corrosion movie for turn on events
 frameRate = 10; %frames/second
-folder = 'C:\Users\User\Documents\MessengerCorrosionSim\CorrosionSim_20201112\SimulationResults';
-filename = 'ReplicateExerperiment';
+folder = 'C:\Users\User\Documents\MessengerCorrosionSim\CorrosionSim_20201112\SimulationResults'; %folder location where data should be saved
+filename = 'FileNameHere';
 
 %% set up folder
 if saveData == true
