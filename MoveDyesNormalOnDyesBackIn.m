@@ -9,7 +9,7 @@
 %will need a total volume of liquid, a total surface area of sample, will
 %need to be adjusted for flow
 
-function [dyeProps, LN] = MoveDyesNormalOnDyesBackIn(dyePropsOld, dimA,HitRate,UncerHR,px,pxsize, StepSize, Conc, PercOn)
+function [dyeProps, LN] = MoveDyesNormalOnDyesBackIn(dyePropsOld, dimA,HitRate,UncerHR,px,pxsize, StepSize, Conc, PercOn, dT)
 %This function removes, moves, and adds dyes for one timestep and returns
 %an array containing the x and y coordinates of the dyes,
 %their amplitudes, and a label of what number dye they are. 
@@ -17,6 +17,7 @@ function [dyeProps, LN] = MoveDyesNormalOnDyesBackIn(dyePropsOld, dimA,HitRate,U
 
 Vol = 18e-6; %volume of flow chamber is 18 uL
 Area = pi*(13e-3)^2; %diameter of flow chamber is 13mm
+flowRate = 10e-6/60; %flow rate in liters/second
 
 persistent labelNumber %this will keep a tally of the total number of dyes that have been in the frame at any point
 if isempty(labelNumber)
@@ -100,14 +101,16 @@ n0 = NewEdges(:,2);
 
 m1 = ((px-1).*rand(HR2,1)+1); %Creating random coordinates for new dye molecules Hitting the imaging plane
 n1 = ((px-1).*rand(HR2,1)+1);  % m1 is for abscissa (x) and n1 is for ordinate (y)
+BulkOnDyes = BulkOnDyes*flowRate*dT/Vol; %gives new number of bulk on dyes after flow
 OnDyesIn = round(BulkOnDyes*Area/(px*pxsize*1e-9)^2/(Conc*6.022e23*Vol) * HR2); %choose a number of random dyes on this list to be on - based on the BulkOnDyes*SurfArea/ROI/(TotalVolumeDyes*Conc) * HR
 A1 = dimA*ones(HR2,1);
 if OnDyesIn > 0
     A1(1:OnDyesIn) = 1; %since coordinates are already random I don't need to randomly pick from list which dyes will be on
 end
-BulkOnDyes = BulkOnDyes - OnDyesIn;
+BulkOnDyes = BulkOnDyes - OnDyesIn; 
 A0 = dimA*ones(size(m0));
-OnDyesFromSides = round(length(A0)*PercOn); %choose number of dyes coming in from edges based on percentage of on to off dyes in frame in previous timestamp (this will need to be input to function)
+PercOn1 = PercOn*(1-flowRate*dT/Vol); %determines a new perecentage based on flow rater removing on dyes
+OnDyesFromSides = round(length(A0)*PercOn1); %choose number of dyes coming in from edges based on percentage of on to off dyes in frame in previous timestamp (this will need to be input to function)
 A0(1:OnDyesFromSides) = 1;
 
 N1 = zeros(HR2+HREdges,1);

@@ -8,7 +8,7 @@
 %                                                                         %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [dyeTracker, turnOnLocs, diffusionMovie, diffusionFig, onLocs, dyeProps,  labelNumber] = Diffusion(startTime, T, dT, px, pxsize, Conc, D, sensMax, sensSigma, CA, cathLoc, frameRate, dye, ironProb, diffusionMovie, diffusionFig, linked)
+function [dyeTracker, turnOnLocs, diffusionMovie, diffusionFig, onLocs, dyeProps,  labelNumber] = Diffusion(startTime, T, dT, px, pxsize, Conc, D, sensMax, sensSigma, CA, cathLoc, frameRate, dye, ironProb, diffusionMovie, diffusionFig, linked, Path, filename, h, saveData, saveMovie, CRate)
 %% set dye parameters
 dimA=0.1; %Amplitude of the non-fluorescent molecules
 sigmax=5; %width of the dye guassian in movie in pixels
@@ -28,7 +28,7 @@ r1=round(HitRate*(1+Numb)); %initial number of dyes in frame
 %else
 %    dyeProps = [];
 %end
-[dyeProps, ~] = MoveDyesNormalOnDyesBackIn([], dimA, HitRate, UncerHR, px, pxsize, StepSize, Conc, 0); %create initial dye positions
+[dyeProps, ~] = MoveDyesNormalOnDyesBackIn([], dimA, HitRate, UncerHR, px, pxsize, StepSize, Conc, 0, dT); %create initial dye positions
 dyeSens = zeros(sensMax/pxsize); %create dye sensitivity 2D gaussian
 for i = 1:sensMax/pxsize
     for j = 1:sensMax/pxsize
@@ -39,27 +39,25 @@ dyeOn = zeros(1000,3); %matrix for saving turn on locations and times, needs to 
 dyeCounter = 1;
 dyeTracker = zeros(T,2); %First column is dyes that are on in each frame, second is total dyes in each frame
 onLocs = []; % cell array that will save matrix of ALL fluorescent dye locs at each time
-
+CR = CRate*dT; %number of reactions possible per time step
 %% run rules
+if ~isempty(find(CA==2)) %only run dyes if there is a pit to turn on dyes
 for t=1:T
     disp(t)
-    l = 1;
+    %l = 1;
     [cm, cn] = size(cathLoc);
-    while l <= size(dyeProps,1)
-        if dyeProps(l,3) >= 0.8
-            alreadyOn = true;
-        else
-            alreadyOn = false;
-        end
+    OffList = find(dyeProps(:,3) <= 0.4); %only going to cycle through dyes that are off
+    Off = OffList(randperm(length(OffList))); %cycle through randomly so that if the limit of number of possible turn on is reached there is no preference for which can turn on
+    L = length(Off);
+    for l = 1:L 
         if strcmp(dye, 'Resazurin') == 1 %if using resazurin which turns on at cathode
-            if CA(round(dyeProps(l,1)), round(dyeProps(l,2))) == 1 %finds nearest pit edge if not over pit
-                [dist, M1, N1] = (NearestNNVariableNeighborhood(CA, [dyeProps(l,1),dyeProps(l,2)], 2, ((cn+sensMax/pxsize)/2)-1)); %distance to nearest pit
-            elseif CA(round(dyeProps(l,1)), round(dyeProps(l,2))) == 2 %finds nearest pit edge if over pit
-                [dist, M1, N1] = (NearestNNVariableNeighborhood(CA, [dyeProps(l,1),dyeProps(l,2)], 1, ((cn+sensMax/pxsize)/2)-1)); %distance to nearest pit
+            if CA(round(dyeProps(Off(l),1)), round(dyeProps(Off(l),2))) == 1 %finds nearest pit edge if not over pit
+                [~, M1, N1] = (NearestNNVariableNeighborhood(CA, [dyeProps(Off(l),1),dyeProps(Off(l),2)], 2, ((cn+sensMax/pxsize)/2)-1)); %distance to nearest pit
+            elseif CA(round(dyeProps(Off(l),1)), round(dyeProps(Off(l),2))) == 2 %finds nearest pit edge if over pit
+                [~, M1, N1] = (NearestNNVariableNeighborhood(CA, [dyeProps(Off(l),1),dyeProps(Off(l),2)], 1, ((cn+sensMax/pxsize)/2)-1)); %distance to nearest pit
             end
             if ~isnan(M1)
-                
-                cathLoc1 = AdjCathLoc(M1, N1,(dyeProps(l,1:2)), CA, cathLoc); %adjust cathLoc distribution to set prob 0 over pit
+                cathLoc1 = AdjCathLoc(M1, N1,(dyeProps(Off(l),1:2)), CA, cathLoc); %adjust cathLoc distribution to set prob 0 over pit
                 C1 = conv2(cathLoc1, dyeSens);
                 C = C1/max(max(C1));
                 zeroInd = ceil(cm/2)+floor(sensMax/pxsize/2);
@@ -72,27 +70,29 @@ for t=1:T
                 Prob = 0;
             end
         else %dye that detects iron ions, turns on with prob ironProb when above pit
-            if CA(round(dyeProps(l,1)), round(dyeProps(l,2))) == 2
+            if CA(round(dyeProps(Off(l),1)), round(dyeProps(Off(l),2))) == 2
                 Prob = ironProb;
             else
                 Prob =0;
             end
         end
         Rdye = rand;
-        if Rdye<Prob && alreadyOn == false %&& CA(dyeProps(l,1), dyeProps(l,2)) ~= 2
-            dyeProps(l,3) = 1; %dye turns on
-            dyeOn(dyeCounter, 1) = dyeProps(l,1); dyeOn(dyeCounter, 2) = dyeProps(l,2);
+        if Rdye<Prob 
+            dyeProps(Off(l),3) = 1; %dye turns on
+            dyeOn(dyeCounter, 1) = dyeProps(Off(l),1); dyeOn(dyeCounter, 2) = dyeProps(Off(l),2);
             dyeOn(dyeCounter, 3) = t*dT;
             dyeCounter = dyeCounter+1;
+        end 
+        if dyeCounter > CR
+            break
         end
-        l = l+1;
-    end   
+    end
     dyeTracker(t,1) = length(find(dyeProps(:,3) >= 0.8));
     dyeTracker(t,2) = size(dyeProps,1);
     PerOn = dyeTracker(t,1)/dyeTracker(t,2);
-    %if linked == false
-    %diffusionMovie=CreateFrameDiffusion(dyeProps,px,sigmax,diffusionMovie, diffusionFig, startTime, dT, frameRate,CA, 'true'); %Creates the moved frame
-    %end
+    if linked == false && saveMovie == true
+        diffusionMovie=CreateFrameDiffusion(dyeProps,px,sigmax,diffusionMovie, diffusionFig, startTime, dT, frameRate,CA, 'true'); %Creates the moved frame
+    end
     offInds = find(dyeProps(:,3)<=0.4);
     S1 = size(dyeProps,1);
     onDyes = zeros(S1, 5);
@@ -100,7 +100,13 @@ for t=1:T
     onDyes(:,5) = t;
     onDyes(offInds,:) = []; %delete not turned on dyes in the onDyes matrix
     onLocs = [onLocs;onDyes];
-    [dyeProps, labelNumber] = MoveDyesNormalOnDyesBackIn(dyeProps, dimA,HitRate,UncerHR,px, pxsize, StepSize, Conc, PerOn);
+    if rem(t,100) == 0 && saveData == true
+        save(strcat(Path, filename, sprintf('_OnLocations%d_%d.mat', h,t)), 'onLocs');
+        clear onLocs
+        onLocs = [];
+    end
+    [dyeProps, labelNumber] = MoveDyesNormalOnDyesBackIn(dyeProps, dimA,HitRate,UncerHR,px, pxsize, StepSize, Conc, PerOn, dT);
+end
 end
 
 %% create datasets and save files

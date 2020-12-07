@@ -14,12 +14,12 @@ pxsize = 10; %pixel size in nm
 linked = false; %true will run corrosion and diffusion concurrently/simealteaneaously, 
                 %false will run corrosion first then diffusion in each overall loop
 if linked == false %input desired values 
-    diffT = 500; %number of time steps for diffusion script
-    diffdT = 0.05; %length of time step for diffusion in seconds
+    diffT = 3000; %number of time steps for diffusion script
+    diffdT = 0.02; %length of time step for diffusion in seconds
     corrT = 1800; %number of time steps for corrosion script
-    corrdT = 10; %length of corrosion time step in seconds
+    corrdT = 1; %length of corrosion time step in seconds
 elseif linked == true
-    dT = 0.5; %dT for each loop in seconds. 
+    dT = 0.2; %dT for each loop in seconds. 
     %do not change anything else in this elseif statement
     diffdT = dT;
     corrdT = dT;
@@ -27,15 +27,15 @@ elseif linked == true
     corrT = 1;
 end
 startTime = 0; 
-numLoops = 1; %number of full corrosion and diffusion loops. 
+numLoops = 6; %number of full corrosion and diffusion loops. 
               %if linked = true this is the total time steps of the simulation
 
 %% set corrosion parameters
-runCorrosion = false; %true will run corrosion script in each loop, false will not
+runCorrosion = true; %true will run corrosion script in each loop, false will not
 if runCorrosion == true
-    Pin = 1e-14; %probability of initiation per second per nm^2
+    Pin = 5e-11; %probability of initiation per second per nm^2
     PinUncer = 2; %percent uncertainty in Pin 
-    Pgr = 0.025 ; %growth probability per nearest neighbor per second
+    Pgr = 0.0005 ; %growth probability per nearest neighbor per second
     %excl = 10; %exclusion zone for pits, the time constant of the exponential representing the exclusion zone probability
                 %not currently in use (9/10/2020)
 else
@@ -43,8 +43,8 @@ else
 end
 %cathLoc will be used to define a 2D gaussian probability distribution 
 %   for the locaion of the cathodic reaction outside a pit
-cathLocMax = 1000; %maximum possible distance for cathodic reaction in nm
-cathSigma = 100; %standard deciation for cathloc gaussian in nm
+cathLocMax = 500; %maximum possible distance for cathodic reaction in nm
+cathSigma = 10; %standard deciation for cathloc gaussian in nm
 cathLoc = zeros(cathLocMax/pxsize); %cathode location probability matrix
 for i=1:cathLocMax/pxsize
     for j = 1:cathLocMax/pxsize
@@ -52,10 +52,10 @@ for i=1:cathLocMax/pxsize
     end
 end
 %% set dye parameters
-runDyes = false; %true will run diffusion in every loop, false will not
+runDyes = true; %true will run diffusion in every loop, false will not
 if runDyes == true
-    Conc=10e-9; %Dye concentration in moles/L
-    D=1e8; % Diffusion constant D (in nm^2/s)
+    Conc=20e-9; %Dye concentration in moles/L
+    D=4e8; % Diffusion constant D (in nm^2/s)
     sensMax = 100; %maximum distance in nm at which a dye can react with the cathode
     sensSigma = 1; %standard deviation for the dye sensitivity distribution in nm
     dye = 'Resazurin'; %which dye is being used ('Resazurin' or 'FD1')
@@ -68,12 +68,14 @@ saveMovie = true; %true saves a movie of the CA
 saveData = true; %true saves data related to corrosion growth, number of pits, dye turn ons, and number of dyes in view (and more)
 plotTurnOns = false; %true will add x's to corrosion movie for turn on events
 frameRate = 10; %frames/second
-folder = 'C:\Users\Hannah\Documents\CWRU\2020_SeniorProject\Fall 2020\CorrosionModelVer5_Files\SimulationResults';
-filename = 'TestLowCorrosionRate';
+folder = 'C:\Users\User\Documents\MessengerCorrosionSim\CorrosionSim_20201112\SimulationResults';
+filename = 'ReplicateExerperiment';
 
 %% set up folder
-if saveMovie == true || saveData == true
+if saveData == true
     [Path, filename] = SetUpFolder(folder, filename); 
+else
+    Path = '';
 end
 
 %% initialize data
@@ -105,17 +107,21 @@ for h=1:numLoops
         if linked ~= true
             startTime = startTime + corrT*corrdT;
         end
+        CorrosionRate = corrosionTracker(end-10:end)*pxsize^2*10/10*corrdT; %nm^3/s corrosion rate 
+    CRate = CorrosionRate/(0.126^3*pi*4/3); %corrosion rate in atoms of iron (reactions) per second, assuming iron has atomic radius 0.126 nm
     else
         CA = CreateCirclePit(px, pitrad/pxsize); %if not running the corrosion script, create a
                                        %    static pit over which to run
                                        %    diffsion
+        CRate = 1e10; %set an "infinite" value for CRate in trials where I am not running corrosion just for now
     end
+    
     if runDyes == true
         sprintf('Diffusion')
         if linked == false
             clear MoveDyesNormalOnDyesBackIn
         end
-        [dyeTracker, turnOnLocs, diffusionMovie, diffusionFig, onLocs, dyeProps,labelNumber] = Diffusion(startTime, diffT, diffdT, px, pxsize, Conc, D, sensMax, sensSigma, CA, cathLoc, frameRate, dye, ironProb, diffusionMovie, diffusionFig, linked);
+        [dyeTracker, turnOnLocs, diffusionMovie, diffusionFig, onLocs, dyeProps,labelNumber] = Diffusion(startTime, diffT, diffdT, px, pxsize, Conc, D, sensMax, sensSigma, CA, cathLoc, frameRate, dye, ironProb, diffusionMovie, diffusionFig, linked, Path, filename, h, saveData, saveMovie, CRate);
         figOverlay = turnOnOverlay(CA, turnOnLocs);
         if saveData == true
             saveas(figOverlay, strcat(Path, sprintf('Overlay%d.png',h)))
@@ -132,6 +138,7 @@ for h=1:numLoops
             if runCorrosion == true
                 dlmwrite(strcat(Path,filename, sprintf('_corrosionTracker%d', h)),corrosionTracker);
                 dlmwrite(strcat(Path,filename, sprintf('_pitLocs%d', h)),pitLocs);
+                dlmwrite(strcat(Path, filename, sprintf('_CA%d', h)), CA); 
             end
             if runDyes == true
                 dlmwrite(strcat(Path, filename, sprintf('_turnOnLocs%d',h)), turnOnLocs);
