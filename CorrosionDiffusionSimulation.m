@@ -14,9 +14,9 @@ pxsize = 10; %pixel size in nm
 linked = false; %true will run corrosion and diffusion concurrently/simealteaneaously, 
                 %false will run corrosion first then diffusion in each overall loop
 if linked == false %input desired values 
-    diffT = 100; %number of time steps for diffusion script
+    diffT = 500; %number of time steps for diffusion script
     diffdT = 0.05; %length of time step for diffusion in seconds
-    corrT = 5; %number of time steps for corrosion script
+    corrT = 1800; %number of time steps for corrosion script
     corrdT = 10; %length of corrosion time step in seconds
 elseif linked == true
     dT = 0.5; %dT for each loop in seconds. 
@@ -33,9 +33,9 @@ numLoops = 1; %number of full corrosion and diffusion loops.
 %% set corrosion parameters
 runCorrosion = false; %true will run corrosion script in each loop, false will not
 if runCorrosion == true
-    Pin = 10/(60*30); %probability of initiation per second
+    Pin = 1e-14; %probability of initiation per second per nm^2
     PinUncer = 2; %percent uncertainty in Pin 
-    Pgr = 0.01 ; %growth probability per nearest neighbor per second
+    Pgr = 0.025 ; %growth probability per nearest neighbor per second
     %excl = 10; %exclusion zone for pits, the time constant of the exponential representing the exclusion zone probability
                 %not currently in use (9/10/2020)
 else
@@ -52,10 +52,10 @@ for i=1:cathLocMax/pxsize
     end
 end
 %% set dye parameters
-runDyes = true; %true will run diffusion in every loop, false will not
+runDyes = false; %true will run diffusion in every loop, false will not
 if runDyes == true
-    Conc=100e-6; %Dye concentration in moles/L
-    D=1e7; % Diffusion constant D (in nm^2/s)
+    Conc=10e-9; %Dye concentration in moles/L
+    D=1e8; % Diffusion constant D (in nm^2/s)
     sensMax = 100; %maximum distance in nm at which a dye can react with the cathode
     sensSigma = 1; %standard deviation for the dye sensitivity distribution in nm
     dye = 'Resazurin'; %which dye is being used ('Resazurin' or 'FD1')
@@ -69,7 +69,7 @@ saveData = true; %true saves data related to corrosion growth, number of pits, d
 plotTurnOns = false; %true will add x's to corrosion movie for turn on events
 frameRate = 10; %frames/second
 folder = 'C:\Users\Hannah\Documents\CWRU\2020_SeniorProject\Fall 2020\CorrosionModelVer5_Files\SimulationResults';
-filename = 'DiffusionCoefficientTest_1e3';
+filename = 'TestLowCorrosionRate';
 
 %% set up folder
 if saveMovie == true || saveData == true
@@ -90,7 +90,7 @@ if linked == true
     end
 end
 %% run simulation
-clear MoveDyes_Normal
+clear MoveDyesNormalOnDyesBackIn
 for h=1:numLoops
     corrosionMovie = [];
     corrosionFig = figure
@@ -101,7 +101,7 @@ for h=1:numLoops
         clear CreateFrameCorrosion
     if runCorrosion == true
         sprintf('Corrosion')
-        [CA, corrosionTracker, pitLocs, corrosionMovie, corrosionFig] = Corrosion(corrT, corrdT, startTime, frameRate, px, Pin, PinUncer, Pgr, CA, turnOnLocs, plotTurnOns, corrosionMovie, corrosionFig, linked);
+        [CA, corrosionTracker, pitLocs, corrosionMovie, corrosionFig] = Corrosion(corrT, corrdT, startTime, frameRate, px, pxsize, Pin, PinUncer, Pgr, CA, turnOnLocs, plotTurnOns, corrosionMovie, corrosionFig, linked);
         if linked ~= true
             startTime = startTime + corrT*corrdT;
         end
@@ -113,7 +113,7 @@ for h=1:numLoops
     if runDyes == true
         sprintf('Diffusion')
         if linked == false
-            clear MoveDyes_Normal
+            clear MoveDyesNormalOnDyesBackIn
         end
         [dyeTracker, turnOnLocs, diffusionMovie, diffusionFig, onLocs, dyeProps,labelNumber] = Diffusion(startTime, diffT, diffdT, px, pxsize, Conc, D, sensMax, sensSigma, CA, cathLoc, frameRate, dye, ironProb, diffusionMovie, diffusionFig, linked);
         figOverlay = turnOnOverlay(CA, turnOnLocs);
@@ -137,7 +137,7 @@ for h=1:numLoops
                 dlmwrite(strcat(Path, filename, sprintf('_turnOnLocs%d',h)), turnOnLocs);
                 dlmwrite(strcat(Path, filename, sprintf('_dyeTracker%d',h)), dyeTracker); 
                 save(strcat(Path, filename, sprintf('_OnLocations%d.mat', h)), 'onLocs');
-                clear turnOnLocs dyeTracker onLocs dyeProps
+                %clear turnOnLocs dyeTracker onLocs dyeProps
             end
             dlmwrite(strcat(Path,filename, sprintf('_CA%d',h)), CA);
         end
@@ -156,7 +156,7 @@ for h=1:numLoops
     %save movie for this loop if its not linked
     if linked == false && saveMovie == true %creates movie file for each loop
         if runCorrosion == true
-            MovieWriter(corrosionMovie, strcat(filename, sprintf('_corrosion%d',h)), frameRate, Path);
+            MovieWriter(corrosionMovie,strcat(filename, sprintf('_corrosion%d',h)), frameRate, Path);
         end
         if runDyes == true
             MovieWriter(diffusionMovie,strcat(filename, sprintf('_dye%d',h)), frameRate, Path);

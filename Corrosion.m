@@ -11,7 +11,7 @@
 %       M -> C with probability Pgr*# of corroded nearest neighbors       %  
 %                                                                         %  
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [CA, corrosionTracker, pitLocs, corrosionMovie, corrosionFig] = Corrosion(T, dT, startTime, frameRate, px, Pin, PinUncer, Pgr, CA, turnOnLocs, plotTurnOns, corrosionMovie, corrosionFig, linked)
+function [CA, corrosionTracker, pitLocs, corrosionMovie, corrosionFig] = Corrosion(T, dT, startTime, frameRate, px,pxsize,  Pin, PinUncer, Pgr, CA, turnOnLocs, plotTurnOns, corrosionMovie, corrosionFig, linked)
 %% set movie and figure parameters
    
 %% create initial array
@@ -27,12 +27,12 @@ for t=1:T
     disp(t)
     corrosionTracker(t) = length(find(CA == 2)); %record total corroded metal at time t
     if linked == false
-    corrosionMovie=CreateFrameCorrosion(corrosionFig, corrosionMovie, CA, startTime, dT, frameRate, turnOnLocs, plotTurnOns);
+        corrosionMovie=CreateFrameCorrosion(corrosionFig, corrosionMovie, CA, startTime, dT, frameRate, turnOnLocs, plotTurnOns);
     end
     Old = CA; %Old is the matrix at t-1
     Pin0 = rand*((Pin+PinUncer*Pin) - (Pin-PinUncer*Pin)) + (Pin-PinUncer*Pin); %random Pin value due to uncertainty
     rin = rand;
-    if rin < Pin0*dT
+    if rin < Pin0*dT*(px*pxsize)^2
         pitCounter = pitCounter+ 1;
         pM = randi([1,px]);
         pN = randi([1,px]);

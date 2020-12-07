@@ -1,12 +1,31 @@
-function [dyeProps, LN] = MoveDyes_Normal(dyePropsOld, dimA,HitRate,UncerHR,px,StepSize)
+%fluorescent dyes coming back in. Will be in two parts. The percentage of
+%dyes that come in from the sides (ie within the imaging plane) will be
+%determined by the percentage of dyes that are flourescent in frame in the
+%previous time step. The percentage of on dyes coming in from the bulk (via
+%the hit rate) will be based on the number of dyes that have escaped to the
+%bulk - adjusted to account for all sample surface area and tracked with a
+%counter
+
+%will need a total volume of liquid, a total surface area of sample, will
+%need to be adjusted for flow
+
+function [dyeProps, LN] = MoveDyesNormalOnDyesBackIn(dyePropsOld, dimA,HitRate,UncerHR,px,pxsize, StepSize, Conc, PercOn)
 %This function removes, moves, and adds dyes for one timestep and returns
 %an array containing the x and y coordinates of the dyes,
 %their amplitudes, and a label of what number dye they are. 
 %Uses normal distribution of step sizes
 
+Vol = 18e-6; %volume of flow chamber is 18 uL
+Area = pi*(13e-3)^2; %diameter of flow chamber is 13mm
+
 persistent labelNumber %this will keep a tally of the total number of dyes that have been in the frame at any point
 if isempty(labelNumber)
     labelNumber = 0;
+end
+
+persistent BulkOnDyes %this variable keeps track of the number of on dyes that have entered the bulk solution across the whole experiment
+if isempty(BulkOnDyes)
+    BulkOnDyes = 0;
 end
 
 if ~isempty(dyePropsOld) 
@@ -28,6 +47,11 @@ HR1=randi([round(HitRate-HitRate*UncerHR), round(HitRate+HitRate*UncerHR)]);
             deldye=randi([1, size(m,1)]);
             m(deldye)=[];
             n(deldye)=[];
+            for k = 1:size(deldye,2)
+                if A(deldye(k)) >= 0.8
+                    BulkOnDyes = BulkOnDyes + 1; %add deleted on dyes to counter
+                end
+            end
             A(deldye)=[];
             N(deldye) = [];
         else
@@ -74,9 +98,18 @@ end
 m0 = NewEdges(:,1);
 n0 = NewEdges(:,2);
 
-m1 = cat(1, (px-1).*rand(HR2,1)+1, m0);%Creating random coordinates for new dye molecules Hitting the imaging plane
-n1 = cat(1, (px-1).*rand(HR2,1)+1, n0);  % m1 is for abscissa (x) and n1 is for ordinate (y)
-A1 = dimA*ones(HR2+HREdges,1);
+m1 = ((px-1).*rand(HR2,1)+1); %Creating random coordinates for new dye molecules Hitting the imaging plane
+n1 = ((px-1).*rand(HR2,1)+1);  % m1 is for abscissa (x) and n1 is for ordinate (y)
+OnDyesIn = round(BulkOnDyes*Area/(px*pxsize*1e-9)^2/(Conc*6.022e23*Vol) * HR2); %choose a number of random dyes on this list to be on - based on the BulkOnDyes*SurfArea/ROI/(TotalVolumeDyes*Conc) * HR
+A1 = dimA*ones(HR2,1);
+if OnDyesIn > 0
+    A1(1:OnDyesIn) = 1; %since coordinates are already random I don't need to randomly pick from list which dyes will be on
+end
+BulkOnDyes = BulkOnDyes - OnDyesIn;
+A0 = dimA*ones(size(m0));
+OnDyesFromSides = round(length(A0)*PercOn); %choose number of dyes coming in from edges based on percentage of on to off dyes in frame in previous timestamp (this will need to be input to function)
+A0(1:OnDyesFromSides) = 1;
+
 N1 = zeros(HR2+HREdges,1);
 for q=1:HR2+HREdges
     N1(q) = labelNumber;
@@ -84,9 +117,9 @@ for q=1:HR2+HREdges
 end
 
 LN = labelNumber;
-m=cat(1,m,m1); % Combining new and old molecules coordinates
-n=cat(1,n,n1);
-A = cat(1,A,A1);
+m=cat(1,m,m1, m0); % Combining new and old molecules coordinates
+n=cat(1,n,n1, n0);
+A = cat(1,A,A1, A0);
 N = cat(1, N, N1);
 
 dyeProps = [m,n,A,N];

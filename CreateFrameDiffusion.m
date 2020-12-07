@@ -31,12 +31,16 @@ end
 if r==0;
     frame = zeros(px,px);
 end
+frame(35:40, 25:75) = 1.01;
+
 figure(fig)
 %figure('visible', 'off')
 imagesc([1,px],[1,px],frame);
 axis image
-caxis([0 1.0]);
+caxis([0 1.01]);
+%set(gcf,'Colormap',turbo);
 colorbar;
+text(25,20, sprintf('500 nm'), 'FontSize', 12,'color', 'white')
 
 %add time marker which will change every second of real time
 if markTime == true
@@ -45,7 +49,7 @@ if isempty(FrameNumDiff)
     FrameNumDiff = 0;
 end
 timeText = startTime+timeStep*(FrameNumDiff-rem(FrameNumDiff,frameRate));
-%text(10,px-20,string(timeText)+ ' seconds','FontSize', 14, 'color', 'white') ;
+text(10,px-20,string(timeText)+ ' seconds','FontSize', 14, 'color', 'white') ;
 FrameNumDiff = FrameNumDiff +1;
 end
 Frame = [movie getframe];
