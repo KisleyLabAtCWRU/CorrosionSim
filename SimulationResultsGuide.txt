@@ -1,0 +1,23 @@
+simulation results guide
+
+05-Nov-2020_CorrosionMovieForSciencepalooza_3
+example of what the corrosion simulations looks like, video and metadata file with paramaters
+
+06-Oct-2020_DiffusionCoefficientTest_ ...
+These files are the data from the first round of diffusion coefficient tests, without turned-on dyes
+coming back in. The analysis I did used 1e+03-1, 1e+06-1, 1e+07-1, and 1e+08-1.
+
+12-Nov-2020_ReplicateExperimentalData_Trial_1_1
+14-Nov-2020_ReplicateExperimentalData_Trial_1_1
+18-Nov-2020_ReplicateExperiment_6
+These were runs meant to simulate Anuj's experimental trials in which he took data for 10 minutes every half hour.
+The corrosion layer is run out for half an hour of real time, and then the solution layer run out, this loops several times
+Information about time steps and parameters is saved in metadata files. I have not done any analysis on these
+
+17-Nov-2020_DiffusionCoefficientFlow_...
+These folders have the data used in the most recent results, used in the manuscript and senior project final paper and presentation.
+12-Nov-2020_DiffusionCoefficientFlow_CompareDiffCoeffs
+Contains figures comparing results for each of the diffusion coefficients from 17-Nov-2020...
+
+30-Sep-2020_StaticPitDiffusionforProgressReport
+Trial run to get video and figures for my progress report
